@@ -55,7 +55,6 @@ public:
      */
     glm::vec3 GetUp();
 
-
 private:
     glm::vec3 mWorldUp;
     glm::vec3 mPosition;

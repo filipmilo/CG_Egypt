@@ -1,16 +1,3 @@
-/**
-* Autor: Nedeljko Tesanovic
-* Namjena: Demonstracija upotrebe sablonskog projekta za ucitavanje i prikaz modela, 3D transformacije, perspektivne projekcije i klase za bafere
-* Original file info
- * @file main.cpp
- * @author Jovan Ivosevic
- * @brief Base project for Computer Graphics course
- * @version 0.1
- * @date 2022-10-09
- *
- * @copyright Copyright (c) 2022
- *
- */
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <chrono>
@@ -21,8 +8,8 @@
 
 #include <iostream>
 #include "shader.hpp"
-#include "model.hpp" //Klasa za ucitavanje modela
-#include "renderable.hpp" //Klasa za bafere
+#include "model.hpp" 
+#include "renderable.hpp" 
 #include "camera.hpp"
 
 int WindowWidth = 800;
@@ -44,6 +31,8 @@ struct Input {
     bool LookRight;
     bool LookUp;
     bool LookDown;
+
+    bool moveB;
 };
 
 struct EngineState {
@@ -54,15 +43,6 @@ struct EngineState {
  
 const float intensityMap[5][2] = {{0.7, 1.8} , {0.35, 0.44}, {0.22, 0.20}, {0.14, 0.07}, {0.09, 0.032}};
 
-/*
-static void
-KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode) {
-    bool IsDown = action == GLFW_PRESS || action == GLFW_REPEAT;
-    switch (key) {
-        case GLFW_KEY_ESCAPE: glfwSetWindowShouldClose(window, GLFW_TRUE); break;
-    }
-}
-*/
 
 static void
 ErrorCallback(int error, const char* description) {
@@ -109,7 +89,6 @@ HandleInput(EngineState* state) {
     if (UserInput->LookRight) FPSCamera->Rotate(-1.0f, 0.0f, state->mDT);
     if (UserInput->LookDown) FPSCamera->Rotate(0.0f, -1.0f, state->mDT);
     if (UserInput->LookUp) FPSCamera->Rotate(0.0f, 1.0f, state->mDT);
-
 }
 
 
@@ -135,39 +114,6 @@ void handleKeys(GLFWwindow* window)
         std::cout << "L was pressed" << std::endl;
         carpetX -= 0.05;
     }
-}
-
-void makeCarpet(Shader &Basic, Renderable &cube, glm::mat4 m, float carpetY)
-{
-    Basic.SetUniform3f("uColor", glm::vec3(0.78, 0.78, 0.78));
-
-    m = glm::translate(glm::mat4(1.0f), glm::vec3(carpetX, carpetY, carpetZ));
-    m = glm::scale(m, glm::vec3(1.0, 0.1, 0.5));
-    Basic.SetModel(m);
-    cube.Render();
-
-    Basic.SetUniform3f("uColor", glm::vec3(1.0, 0.0, 0.0));
-
-    m = glm::translate(glm::mat4(1.0f), glm::vec3(carpetX + 0.4, carpetY, carpetZ));
-    m = glm::scale(m, glm::vec3(1.0, 0.1, 0.5));
-    Basic.SetModel(m);
-    cube.Render();
-
-    Basic.SetUniform3f("uColor", glm::vec3(0.0, 1.0, 0.0));
-
-    m = glm::translate(glm::mat4(1.0f), glm::vec3(carpetX, carpetY, carpetZ + 0.2));
-    m = glm::scale(m, glm::vec3(1.0, 0.1, 0.5));
-    Basic.SetModel(m);
-    cube.Render();
-
-
-    Basic.SetUniform3f("uColor", glm::vec3(0.0, 0.0, 1.0));
-
-    m = glm::translate(glm::mat4(1.0f), glm::vec3(carpetX + 0.4, carpetY, carpetZ + 0.2));
-    m = glm::scale(m, glm::vec3(1.0, 0.1, 0.5));
-    Basic.SetModel(m);
-    cube.Render();
-
 }
 
 static void
@@ -199,7 +145,6 @@ int main() {
         std::cerr << "Failed to init glfw" << std::endl;
         return -1;
     }
-    
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -234,8 +179,6 @@ int main() {
         return -1;
     }
 
-    
-
     Shader BasicShader("shaders/basic_old.vert", "shaders/basic.frag");
     Shader ColorShader("shaders/color.vert", "shaders/color.frag");
     Shader PhongShaderMaterialTexture("shaders/basic.vert", "shaders/phong_material_texture.frag");
@@ -244,6 +187,7 @@ int main() {
     glUseProgram(PhongShaderMaterialTexture.GetId());
     
     PhongShaderMaterialTexture.SetUniform3f("uDirLight.Direction", glm::vec3(20.0, 25.5, 10.0));
+    //glm::vec3(0.75294f, 0.75294f, 0.75294f)
     PhongShaderMaterialTexture.SetUniform3f("uDirLight.Ka", glm::vec3(0.75294f, 0.75294f, 0.75294f));
     PhongShaderMaterialTexture.SetUniform3f("uDirLight.Kd", glm::vec3(0.5f, 0.5f, 0.5f));
     PhongShaderMaterialTexture.SetUniform3f("uDirLight.Ks", glm::vec3(1.0f));
@@ -262,33 +206,26 @@ int main() {
     PhongShaderMaterialTexture.SetUniform1f("uPointLights[1].Kl", intensityMap[4][0]);
     PhongShaderMaterialTexture.SetUniform1f("uPointLights[1].Kq", intensityMap[4][1]);
 
-    //glm::vec3(0.0f, 3.5f, -2.0f)
-    //glm::vec3(20.0, 25.5, 10.0)
-    //glm::vec3(20.0, 20.5, 10.0)
-
-    //glm::vec3(1.0, 15.5, 5.0)
-    //glm::vec3(1.0,-5.0, -1.0)
-    PhongShaderMaterialTexture.SetUniform3f("uSpotlight.Position", glm::vec3(20.0, 20.5, 10.0));
-    PhongShaderMaterialTexture.SetUniform3f("uSpotlight.Direction", -glm::vec3(20.0, 20.5, 10.0));
-    PhongShaderMaterialTexture.SetUniform3f("uSpotlight.Ka", glm::vec3(1.0f, 0.0f, 0.0f));
+    PhongShaderMaterialTexture.SetUniform3f("uSpotlight.Position", glm::vec3(20.0, 25.5, 10.0));
+    PhongShaderMaterialTexture.SetUniform3f("uSpotlight.Ka", glm::vec3(1.0f, 1.0f, 1.0f));
     PhongShaderMaterialTexture.SetUniform3f("uSpotlight.Kd", glm::vec3(0.5f, 0.0f, 0.0f));
     PhongShaderMaterialTexture.SetUniform3f("uSpotlight.Ks", glm::vec3(1.0f));
     PhongShaderMaterialTexture.SetUniform1f("uSpotlight.Kc", 1.0f);
-    PhongShaderMaterialTexture.SetUniform1f("uSpotlight.Kl", 0.0014f);
-    PhongShaderMaterialTexture.SetUniform1f("uSpotlight.Kq", 0.000007f);
-    PhongShaderMaterialTexture.SetUniform1f("uSpotlight.InnerCutOff", glm::cos(glm::radians(2.5f)));
-    PhongShaderMaterialTexture.SetUniform1f("uSpotlight.OuterCutOff", glm::cos(glm::radians(2.5f)));
-    // NOTE(Jovan): Diminishes the light's diffuse component by half, tinting it slightly red
+    PhongShaderMaterialTexture.SetUniform1f("uSpotlight.Kl", 0.022f);
+    PhongShaderMaterialTexture.SetUniform1f("uSpotlight.Kq", 0.0019f);
+    PhongShaderMaterialTexture.SetUniform1f("uSpotlight.InnerCutOff", glm::cos(glm::radians(1.0f)));
+    PhongShaderMaterialTexture.SetUniform1f("uSpotlight.OuterCutOff", glm::cos(glm::radians(1.5f)));
+    // Diminishes the light's diffuse component by half, tinting it slightly red
     PhongShaderMaterialTexture.SetUniform1i("uMaterial.Kd", 0);
-    // NOTE(Jovan): Makes the object really shiny
+    // Makes the object really shiny
     PhongShaderMaterialTexture.SetUniform1i("uMaterial.Ks", 1);
     PhongShaderMaterialTexture.SetUniform1f("uMaterial.Shininess", 128.0f);
     glUseProgram(0);
 
     
-    //Ucitavanje modela
-    Model Jap("spider/spider.obj");
-    if (!Jap.Load())
+    //Model load
+    Model Entity("spider/spider.obj");
+    if (!Entity.Load())
     {
         std::cout << "Failed to load model!\n";
         glfwTerminate();
@@ -306,19 +243,6 @@ int main() {
         +0.2, +0.2, -0.2,       0.0, 0.0, 0.0,
         -0.2, +0.2, +0.2,       0.0, 0.0, 0.0,
         +0.2, +0.2, +0.2,       0.0, 0.0, 0.0,
-    };
-
-    float funkyCubeVertices[] = //Sarena kocka
-    {
-        -0.2, -0.2, -0.2,       0.0, 0.0, 1.0,
-        +0.2, -0.2, -0.2,       0.0, 1.0, 0.0,
-        -0.2, -0.2, +0.2,       0.0, 0.5, 1.0,
-        +0.2, -0.2, +0.2,       0.5, 0.0, 0.0,
-
-        -0.0, +0.2, -0.0,       1.0, 0.0, 1.0,
-        +0.0, +0.2, -0.0,       1.0, 1.0, 0.0,
-        -0.0, +0.2, +0.0,       1.0, 1.0, 1.0,
-        +0.0, +0.2, +0.0,       0.0, 0.0, 0.0,
     };
 
     unsigned int cubeIndices[] = {
@@ -340,11 +264,9 @@ int main() {
         0, 1, 3,
         0, 3, 2
         
-    }; //Indeksi za formiranje kocke
+    };
 
-    //Pravljenje Renderable objekta (Generise VAO i VBO pri konstrukciji)
     Renderable cube(cubeVertices, sizeof(cubeVertices), cubeIndices, sizeof(cubeIndices));
-    Renderable funkyCube(funkyCubeVertices, sizeof(funkyCubeVertices), cubeIndices, sizeof(cubeIndices));
 
     unsigned CubeDiffuseTexture = Texture::LoadImageToTexture("res/sand.jpg");
     unsigned CubeSpecularTexture = Texture::LoadImageToTexture("res/sand_spec.jpg");
@@ -474,22 +396,12 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    //Matrica modela (transformacije)
     glm::mat4 m(1.0f);
-    //mat4(A) generise matricu 4x4 sa A na glavnoj dijagonali
-
-    //Matrica pogleda (kamere)
-    glm::mat4 v = glm::lookAt(glm::vec3(0.0, 1.0, -5.5), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
     glm::mat4 View = glm::lookAt(FPSCamera.GetPosition(), FPSCamera.GetTarget(), FPSCamera.GetUp());
-
-    //lookAt(pozicija kamere, tacka u koju kamera gleda, kako je kamera rotirana po osi definisanoj sa prethodne dvije tacke)
-    
-    //Matrica projekcije
     glm::mat4 p = glm::perspective(glm::radians(90.0f), (float)WindowWidth / WindowHeight, 0.1f, 100.0f);
-    //perspective(FOV ugao, aspect ratio prozora, prednja odsjecna ravan i zadnja odsjecna ravan)
     
-    float angle = 0;//Ugao za rotiranje aviona
-    float movement = 0;//Offset za pomijeranje aviona
+    float angle = 0;
+    float movement = 0;
 
     float carpetY = 0.55;
     float capetYOffset = 0.002;
@@ -539,11 +451,9 @@ int main() {
         
         PhongShaderMaterialTexture.SetUniform1f("uPointLights[1].Kl", intensityMap[pointLightIntensity2][0]);
         PhongShaderMaterialTexture.SetUniform1f("uPointLights[1].Kq", intensityMap[pointLightIntensity2][1]);
-
-
         
 
-        if (counter == 25) {
+        if (counter == 5) {
             
             if (pointLightIntensity1 == 0)
                 point1Direction = 1;
@@ -563,7 +473,6 @@ int main() {
         
         counter++;
 
-
         //carpet
         glm::mat4 ModelMatrix = glm::mat4(1.0f);
         ModelMatrix = glm::translate(ModelMatrix, glm::vec3(carpetX, carpetY, carpetZ));
@@ -573,6 +482,8 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, CarpetTexture);
         glBindVertexArray(CubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, CubeVertices.size() / 8);
+
+        PhongShaderMaterialTexture.SetUniform3f("uSpotlight.Direction", glm::vec3(carpetX, carpetY, carpetZ) - glm::vec3(20.0, 25.5, 10.0));
 
         //moon
         ModelMatrix = glm::mat4(1.0f);
@@ -585,7 +496,6 @@ int main() {
         glDrawArrays(GL_TRIANGLES, 0, CubeVertices.size() / 8);
         ModelMatrix = glm::rotate(ModelMatrix, glm::radians(45.0f), glm::vec3(1.0, 1.0, 1.0));
         PhongShaderMaterialTexture.SetModel(ModelMatrix);
-
         glBindVertexArray(CubeVAO);
         glDrawArrays(GL_TRIANGLES, 0, CubeVertices.size() / 8);
 
@@ -610,10 +520,10 @@ int main() {
         glDrawArrays(GL_TRIANGLES, 0, PyramidVertices.size() / 8);
 
         //spooder
-        m = glm::translate(glm::mat4(1.0f), glm::vec3(3.0, 0.0, 7.0)); //Pomjeranje za XYZ (cetvrta kolona matrice)
-        m = glm::scale(m, glm::vec3(0.05, 0.05, 0.05)); //Skaliranje objekta po XYZ (dijagonala matrice. Ne stavljati 0!)
+        m = glm::translate(glm::mat4(1.0f), glm::vec3(3.0, 0.0, 7.0));
+        m = glm::scale(m, glm::vec3(0.05, 0.05, 0.05)); 
         PhongShaderMaterialTexture.SetModel(m);
-        Jap.Render();
+        Entity.Render();
 
         DrawFloor(CubeVAO, PhongShaderMaterialTexture, CubeDiffuseTexture, CubeSpecularTexture);
         
@@ -631,12 +541,6 @@ int main() {
         ColorShader.SetUniform3f("uColor", glm::vec3(1.0f, 0.843f, 0.0f));
         ColorShader.SetModel(m);
         cube.Render();
-
-        m = glm::translate(glm::mat4(1.0f), glm::vec3(20.0, 20.5, 10.0));
-        ColorShader.SetUniform3f("uColor", glm::vec3(1.0f, 0.2f, 0.0f));
-        ColorShader.SetModel(m);
-        cube.Render();
-
 
         carpetY += capetYOffset * offsetMultiplier;
         if (carpetY + capetYOffset > 0.55 && offsetMultiplier == 1)
